@@ -7,3 +7,4 @@ edition = "2018"
 [dependencies]
 whoami = "0.2.4"
 colored = "1.6"
+os_type = "2.2"

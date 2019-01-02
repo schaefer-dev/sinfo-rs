@@ -13,7 +13,6 @@ pub fn remove_local_substrings(input_string: &mut String) {
         for element in &hostname_vec {
             if *element == "local" {
                 remove_indexes.push_back(iter_index);
-                println!("DEBUG: Hostname Index {} has to be removed later", iter_index);
             }
             iter_index += 1;
         }
@@ -22,7 +21,6 @@ pub fn remove_local_substrings(input_string: &mut String) {
         let mut remove_counter: usize = 0;
         while remove_indexes.is_empty() == false {
             let remove_index = remove_indexes.pop_front().unwrap();
-            println!("DEBUG: Removing Index {} now", remove_index);
             hostname_vec.remove(remove_index - remove_counter);
             remove_counter += 1;
         }

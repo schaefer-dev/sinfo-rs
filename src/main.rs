@@ -1,11 +1,15 @@
 extern crate whoami;
 extern crate colored;
+extern crate os_type;
 
 mod string_utils;
 use crate::string_utils::*;
 
 use std::fmt;
 use colored::*;
+
+use std::path::Path;
+use std::ffi::OsStr;
 
 fn main() {
     let mut system = System::read_data();
@@ -34,7 +38,28 @@ impl System {
 
     // Perform post-processing to make Strings look more appealing
     fn post_processing(&mut self) -> () {
+        // Remove all occurances of '.local' in hostname
         remove_local_substrings(&mut self.hostname);
+
+        // if OS not detected, use my own approach
+        // NOTE: whoami library outputs a typo in the case of OS being unknown
+        if self.os == "uknown" || self.os == "unknown" {
+            self.os = System::get_os();
+        }
+    }
+
+    fn get_os() -> String {
+        // Test for arch
+        let pacman_path = Path::new("/etc/pacman.conf");
+        if pacman_path.exists() {
+            return "Arch Linux".to_string();
+        }
+
+        let os = os_type::current_platform();
+
+        let os_string: String = format!("{:?} {}", os.os_type, os.version);
+
+        return os_string;
     }
 }
 
@@ -43,7 +68,7 @@ impl fmt::Display for System {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let username_prefix = "Username:".cyan();
         let hostname_prefix = "Hostname:".cyan();
-        let os_prefix = "OS:".cyan();
+        let os_prefix = "Distro:".cyan();
         let env_prefix = "ENV:".cyan();
 
         let write_result = write!(f, "{} {}\n", username_prefix, self.username);
