@@ -27,6 +27,7 @@ struct System {
     ram: String,
     disk_percentage: String,
     terminal: String,
+    shell: String,
     editor: String,
     is_mac: bool,
 }
@@ -45,6 +46,7 @@ impl System {
             disk_percentage: "unknown".to_string(),
             terminal: System::get_shell_output("$TERM"),
             editor: System::get_shell_output("$EDITOR"),
+            shell: System::get_shell_output("$SHELL"),
             is_mac: false,
         };
         system.get_hardware();
@@ -129,6 +131,7 @@ impl fmt::Display for System {
         let graphics_prefix = "GPU:".cyan();
         let terminal_prefix = "Term:".cyan();
         let editor_prefix = "Editor:".cyan();
+        let shell_prefix = "Shell:".cyan();
         let ram_prefix = "Memory:".cyan();
         let disk_percentage_prefix = "Disk Usage:".cyan();
 
@@ -169,6 +172,12 @@ impl fmt::Display for System {
         }
 
         let write_result = write!(f, "{} {}\n", terminal_prefix, self.terminal);
+        match write_result {
+            Ok(_v) => (),
+            Err(_e) => return write_result,
+        }
+
+        let write_result = write!(f, "{} {}\n", shell_prefix, self.shell);
         match write_result {
             Ok(_v) => (),
             Err(_e) => return write_result,
