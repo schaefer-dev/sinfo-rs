@@ -24,6 +24,8 @@ struct System {
     hostname: String,
     graphics: String,
     cpu: String,
+    ram: String,
+    disk_percentage: String,
     terminal: String,
     editor: String,
     is_mac: bool,
@@ -39,6 +41,8 @@ impl System {
             hostname: whoami::hostname(),
             graphics: "unknown".to_string(),
             cpu: "unknown".to_string(),
+            ram: "unknown".to_string(),
+            disk_percentage: "unknown".to_string(),
             terminal: System::get_shell_output("$TERM"),
             editor: System::get_shell_output("$EDITOR"),
             is_mac: false,
@@ -83,6 +87,11 @@ impl System {
         self.graphics = System::get_shell_output("$(system_profiler SPDisplaysDataType | awk '/Model/{for (i=1; i<=NF-2; i++) $i = $(i+2); NF-=2; print}' | paste -sd '/' -)");
 
         self.cpu = System::get_shell_output("$(sysctl -n machdep.cpu.brand_string)");
+
+        let ram_in_bytes_str: String = System::get_shell_output("$(sysctl -n hw.memsize)");
+        self.ram = (ram_in_bytes_str.parse::<u64>().unwrap() / 1073741274).to_string() + " GB";
+
+        self.disk_percentage = System::get_shell_output("$(df -Hl | head -2 | tail -1) | awk '{print $5}'");
     }
 
     // Function writes CPU, GPU and RAM values
@@ -120,6 +129,8 @@ impl fmt::Display for System {
         let graphics_prefix = "GPU:".cyan();
         let terminal_prefix = "Term:".cyan();
         let editor_prefix = "Editor:".cyan();
+        let ram_prefix = "Memory:".cyan();
+        let disk_percentage_prefix = "Disk Usage:".cyan();
 
         let write_result = write!(f, "{} {}\n", username_prefix, self.username);
         match write_result {
@@ -145,6 +156,12 @@ impl fmt::Display for System {
             Err(_e) => return write_result,
         }
 
+        let write_result = write!(f, "{} {}\n", ram_prefix, self.ram);
+        match write_result {
+            Ok(_v) => (),
+            Err(_e) => return write_result,
+        }
+
         let write_result = write!(f, "{} {}\n", graphics_prefix, self.graphics);
         match write_result {
             Ok(_v) => (),
@@ -158,6 +175,12 @@ impl fmt::Display for System {
         }
 
         let write_result = write!(f, "{} {}\n", editor_prefix, self.editor);
+        match write_result {
+            Ok(_v) => (),
+            Err(_e) => return write_result,
+        }
+
+        let write_result = write!(f, "{} {}\n", disk_percentage_prefix, self.disk_percentage);
         match write_result {
             Ok(_v) => (),
             Err(_e) => return write_result,
