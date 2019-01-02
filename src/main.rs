@@ -184,22 +184,7 @@ impl fmt::Display for System {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
-        // Building Apple Logo
-        let mut apple_logo_lines: Vec<String> = Vec::new();
-        apple_logo_lines.push("                 ###                  ".yellow().to_string());
-        apple_logo_lines.push("               ####                   ".yellow().to_string());
-        apple_logo_lines.push("               ###                    ".yellow().to_string());
-        apple_logo_lines.push("       #######    #######             ".yellow().to_string());
-        apple_logo_lines.push("     ######################           ".yellow().to_string());
-        apple_logo_lines.push("    #####################             ".yellow().to_string());
-        apple_logo_lines.push("    ####################              ".yellow().to_string());
-        apple_logo_lines.push("    ####################              ".yellow().to_string());
-        apple_logo_lines.push("    #####################             ".yellow().to_string());
-        apple_logo_lines.push("     ######################           ".yellow().to_string());
-        apple_logo_lines.push("      ####################            ".yellow().to_string());
-        apple_logo_lines.push("        ################              ".yellow().to_string());
-        apple_logo_lines.push("         ####     #####               ".yellow().to_string());
-
+        let os_logo_lines: Vec<String> = get_os_logo(self.is_mac);
 
         // Vector which defines the order in which the SystemProperties are printed
         let spacer: SystemProperty = SystemProperty {
@@ -220,7 +205,7 @@ impl fmt::Display for System {
             &self.terminal, &self.shell, &self.editor];
 
         for element in &output_data_vector {
-            print!("{}", apple_logo_lines[logo_iterator]);
+            print!("{}", os_logo_lines[logo_iterator]);
             logo_iterator += 1;
             let write_result = write!(f, "{} {}\n", element.prefix, element.value);
             match write_result {
@@ -229,8 +214,8 @@ impl fmt::Display for System {
             }
         }
 
-        while logo_iterator < apple_logo_lines.len() {
-            println!("{}", apple_logo_lines[logo_iterator]);
+        while logo_iterator < os_logo_lines.len() {
+            println!("{}", os_logo_lines[logo_iterator]);
             logo_iterator += 1;
         }
         Ok(())

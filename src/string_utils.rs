@@ -1,4 +1,5 @@
 use std::collections::VecDeque as VecDeque;
+use colored::*;
 
 // Remove '.local' from Hostname
 pub fn remove_local_substrings(input_string: &mut String) {
@@ -38,6 +39,48 @@ pub fn remove_local_substrings(input_string: &mut String) {
             input_string.push_str(".");
             input_string.push_str(host_part);
         }
+}
+
+pub fn get_os_logo(is_mac: bool) -> Vec<String>{
+
+    if is_mac {
+        let mut apple_logo_lines: Vec<String> = Vec::new();
+
+        apple_logo_lines.push("                 ###                  ".yellow().to_string());
+        apple_logo_lines.push("               ####                   ".yellow().to_string());
+        apple_logo_lines.push("               ###                    ".yellow().to_string());
+        apple_logo_lines.push("       #######    #######             ".yellow().to_string());
+        apple_logo_lines.push("     ######################           ".yellow().to_string());
+        apple_logo_lines.push("    #####################             ".yellow().to_string());
+        apple_logo_lines.push("    ####################              ".yellow().to_string());
+        apple_logo_lines.push("    ####################              ".yellow().to_string());
+        apple_logo_lines.push("    #####################             ".yellow().to_string());
+        apple_logo_lines.push("     ######################           ".yellow().to_string());
+        apple_logo_lines.push("      ####################            ".yellow().to_string());
+        apple_logo_lines.push("        ################              ".yellow().to_string());
+        apple_logo_lines.push("         ####     #####               ".yellow().to_string());
+
+        apple_logo_lines
+
+    } else {
+        let mut linux_logo_lines: Vec<String> = Vec::new();
+
+        linux_logo_lines.push(" ####                                 ".yellow().to_string());
+        linux_logo_lines.push(" ####                                 ".yellow().to_string());
+        linux_logo_lines.push(" ####                                 ".yellow().to_string());
+        linux_logo_lines.push(" ####                     ###         ".yellow().to_string());
+        linux_logo_lines.push(" ####                     ###         ".yellow().to_string());
+        linux_logo_lines.push(" ####                                 ".yellow().to_string());
+        linux_logo_lines.push(" ####                     ###         ".yellow().to_string());
+        linux_logo_lines.push(" ####                     ###         ".yellow().to_string());
+        linux_logo_lines.push(" ####                     ###         ".yellow().to_string());
+        linux_logo_lines.push(" ####                     ###         ".yellow().to_string());
+        linux_logo_lines.push(" #####                    ###         ".yellow().to_string());
+        linux_logo_lines.push(" #####################    ###         ".yellow().to_string());
+        linux_logo_lines.push(" ######################   ###         ".yellow().to_string());
+
+        linux_logo_lines
+    }
 }
 
 #[test]
