@@ -18,35 +18,91 @@ fn main() {
     println!("{}", system);
 }
 
+struct SystemProperty {
+    prefix: String,
+    value: String,
+}
+
 struct System {
-    username: String,
-    os: String,
-    hostname: String,
-    graphics: String,
-    cpu: String,
-    ram: String,
-    disk_percentage: String,
-    terminal: String,
-    shell: String,
-    editor: String,
+    username: SystemProperty,
+    os: SystemProperty,
+    hostname: SystemProperty,
+    graphics: SystemProperty,
+    cpu: SystemProperty,
+    ram: SystemProperty,
+    disk_percentage: SystemProperty,
+    terminal: SystemProperty,
+    shell: SystemProperty,
+    editor: SystemProperty,
     is_mac: bool,
 }
 
 impl System {
 
     fn read_data() -> System {
-        // TODO: call the get functions here directly instead of setting to unknown and afterwards
+
+        let username: SystemProperty = SystemProperty {
+            value: whoami::username(),
+            prefix: "Username:".cyan().to_string(),
+        };
+
+        let os: SystemProperty = SystemProperty {
+            value: System::get_os(),
+            prefix: "OS:".cyan().to_string(),
+        };
+
+        let hostname: SystemProperty = SystemProperty {
+            value: whoami::hostname(),
+            prefix: "Hostname:".cyan().to_string(),
+        };
+
+        let graphics: SystemProperty = SystemProperty {
+            value: "unknown".to_string(),
+            prefix: "GPU:".cyan().to_string(),
+        };
+
+        let cpu: SystemProperty = SystemProperty {
+            value: "unknown".to_string(),
+            prefix: "CPU:".cyan().to_string(),
+        };
+
+        let ram: SystemProperty = SystemProperty {
+            value: "unknown".to_string(),
+            prefix: "RAM:".cyan().to_string(),
+        };
+
+        let disk_percentage: SystemProperty = SystemProperty {
+            value: "unknown".to_string(),
+            prefix: "Disk Usage:".cyan().to_string(),
+        };
+
+        let terminal: SystemProperty = SystemProperty {
+            value: System::get_shell_output("$TERM"),
+            prefix: "Terminal:".cyan().to_string(),
+        };
+
+        let shell: SystemProperty = SystemProperty {
+            value: System::get_shell_output("$SHELL"),
+            prefix: "Shell:".cyan().to_string(),
+        };
+
+        let editor: SystemProperty = SystemProperty {
+            value: System::get_shell_output("$EDITOR"),
+            prefix: "Editor:".cyan().to_string(),
+        };
+
+
         let mut system: System = System {
-            username: whoami::username(),
-            os: System::get_os(),
-            hostname: whoami::hostname(),
-            graphics: "unknown".to_string(),
-            cpu: "unknown".to_string(),
-            ram: "unknown".to_string(),
-            disk_percentage: "unknown".to_string(),
-            terminal: System::get_shell_output("$TERM"),
-            editor: System::get_shell_output("$EDITOR"),
-            shell: System::get_shell_output("$SHELL"),
+            username,
+            os,
+            hostname,
+            graphics,
+            cpu,
+            ram,
+            disk_percentage,
+            terminal,
+            editor,
+            shell,
             is_mac: false,
         };
         system.get_hardware();
@@ -56,10 +112,10 @@ impl System {
     // Perform post-processing to make Strings look more appealing
     fn post_processing(&mut self) -> () {
         // Remove all occurances of '.local' in hostname
-        remove_local_substrings(&mut self.hostname);
+        remove_local_substrings(&mut self.hostname.value);
 
         // TODO: Think of a safe approach to truncate 'Intel(R) Core(TM)' without hardcoding 18 chars
-        self.cpu = self.cpu[18..].to_string();
+        self.cpu.value = self.cpu.value[18..].to_string();
     }
 
     fn get_os() -> String {
@@ -76,7 +132,7 @@ impl System {
     }
 
     fn get_hardware(&mut self) {
-        if self.os[0..3] == "OSX".to_string() {
+        if self.os.value[0..3] == "OSX".to_string() {
             self.is_mac = true;
             self.get_osx_hardware();
         } else {
@@ -86,14 +142,14 @@ impl System {
 
     // Function writes CPU, GPU and RAM values
     fn get_osx_hardware(&mut self) {
-        self.graphics = System::get_shell_output("$(system_profiler SPDisplaysDataType | awk '/Model/{for (i=1; i<=NF-2; i++) $i = $(i+2); NF-=2; print}' | paste -sd '/' -)");
+        self.graphics.value = System::get_shell_output("$(system_profiler SPDisplaysDataType | awk '/Model/{for (i=1; i<=NF-2; i++) $i = $(i+2); NF-=2; print}' | paste -sd '/' -)");
 
-        self.cpu = System::get_shell_output("$(sysctl -n machdep.cpu.brand_string)");
+        self.cpu.value = System::get_shell_output("$(sysctl -n machdep.cpu.brand_string)");
 
         let ram_in_bytes_str: String = System::get_shell_output("$(sysctl -n hw.memsize)");
-        self.ram = (ram_in_bytes_str.parse::<u64>().unwrap() / 1073741274).to_string() + " GB";
+        self.ram.value = (ram_in_bytes_str.parse::<u64>().unwrap() / 1073741274).to_string() + " GB";
 
-        self.disk_percentage = System::get_shell_output("$(df -Hl | head -2 | tail -1) | awk '{print $5}'");
+        self.disk_percentage.value = System::get_shell_output("$(df -Hl | head -2 | tail -1) | awk '{print $5}'");
     }
 
     // Function writes CPU, GPU and RAM values
@@ -124,77 +180,16 @@ impl System {
 impl fmt::Display for System {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let username_prefix = "Username:".cyan();
-        let hostname_prefix = "Hostname:".cyan();
-        let os_prefix = "Distro:".cyan();
-        let cpu_prefix = "CPU:".cyan();
-        let graphics_prefix = "GPU:".cyan();
-        let terminal_prefix = "Term:".cyan();
-        let editor_prefix = "Editor:".cyan();
-        let shell_prefix = "Shell:".cyan();
-        let ram_prefix = "Memory:".cyan();
-        let disk_percentage_prefix = "Disk Usage:".cyan();
 
-        let write_result = write!(f, "{} {}\n", username_prefix, self.username);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
+        let output_data_vector = vec![&self.username, &self.hostname, &self.os, &self.cpu, &self.ram, &self.graphics, &self.terminal, &self.shell, &self.editor, &self.disk_percentage];
+
+        for element in &output_data_vector {
+            let write_result = write!(f, "{} {}\n", element.prefix, element.value);
+            match write_result {
+                Ok(_v) => (),
+                Err(_e) => return write_result,
+            }
         }
-
-        let write_result = write!(f, "{} {}\n", hostname_prefix, self.hostname);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", os_prefix, self.os);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", cpu_prefix, self.cpu);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", ram_prefix, self.ram);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", graphics_prefix, self.graphics);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", terminal_prefix, self.terminal);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", shell_prefix, self.shell);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", editor_prefix, self.editor);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", disk_percentage_prefix, self.disk_percentage);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
 
         Ok(())
     }
