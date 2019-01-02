@@ -184,12 +184,32 @@ impl fmt::Display for System {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
+        // Building Apple Logo
+        let mut apple_logo_lines: Vec<String> = Vec::new();
+        apple_logo_lines.push("                 ###                  ".yellow().to_string());
+        apple_logo_lines.push("               ####                   ".yellow().to_string());
+        apple_logo_lines.push("               ###                    ".yellow().to_string());
+        apple_logo_lines.push("       #######    #######             ".yellow().to_string());
+        apple_logo_lines.push("     ######################           ".yellow().to_string());
+        apple_logo_lines.push("    #####################             ".yellow().to_string());
+        apple_logo_lines.push("    ####################              ".yellow().to_string());
+        apple_logo_lines.push("    ####################              ".yellow().to_string());
+        apple_logo_lines.push("    #####################             ".yellow().to_string());
+        apple_logo_lines.push("     ######################           ".yellow().to_string());
+        apple_logo_lines.push("      ####################            ".yellow().to_string());
+        apple_logo_lines.push("        ################              ".yellow().to_string());
+        apple_logo_lines.push("         ####     #####               ".yellow().to_string());
+
+
         // Vector which defines the order in which the SystemProperties are printed
         let spacer: SystemProperty = SystemProperty {
             prefix: "----------------------------".yellow().to_string(),
             value: "".to_string(),
         };
 
+        let mut logo_iterator: usize = 0;
+        //print!("{}", apple_logo_lines[logo_iterator]);
+        //logo_iterator += 1;
         print!("\n");
 
         let output_data_vector = vec![
@@ -200,11 +220,18 @@ impl fmt::Display for System {
             &self.terminal, &self.shell, &self.editor];
 
         for element in &output_data_vector {
+            print!("{}", apple_logo_lines[logo_iterator]);
+            logo_iterator += 1;
             let write_result = write!(f, "{} {}\n", element.prefix, element.value);
             match write_result {
                 Ok(_v) => (),
                 Err(_e) => return write_result,
             }
+        }
+
+        while logo_iterator < apple_logo_lines.len() {
+            println!("{}", apple_logo_lines[logo_iterator]);
+            logo_iterator += 1;
         }
         Ok(())
     }
