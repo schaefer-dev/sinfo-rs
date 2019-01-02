@@ -190,7 +190,7 @@ impl fmt::Display for System {
             value: "".to_string(),
         };
 
-        println!("\n");
+        print!("\n");
 
         let output_data_vector = vec![
             &self.username, &self.hostname, &self.os,
