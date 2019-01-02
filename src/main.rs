@@ -118,6 +118,7 @@ impl System {
         self.cpu.value = self.cpu.value[18..].to_string();
     }
 
+    // Returns the running Operating System
     fn get_os() -> String {
         // Test for arch
         let pacman_path = Path::new("/etc/pacman.conf");
@@ -131,6 +132,7 @@ impl System {
         return os_string;
     }
 
+    // Depending on the OS read SystemProperties of hardware
     fn get_hardware(&mut self) {
         if self.os.value[0..3] == "OSX".to_string() {
             self.is_mac = true;
@@ -140,7 +142,7 @@ impl System {
         }
     }
 
-    // Function writes CPU, GPU and RAM values
+    // Function reads OS dependant System Properties for macOS
     fn get_osx_hardware(&mut self) {
         self.graphics.value = System::get_shell_output("$(system_profiler SPDisplaysDataType | awk '/Model/{for (i=1; i<=NF-2; i++) $i = $(i+2); NF-=2; print}' | paste -sd '/' -)");
 
@@ -152,11 +154,12 @@ impl System {
         self.disk_percentage.value = System::get_shell_output("$(df -Hl | head -2 | tail -1) | awk '{print $5}'");
     }
 
-    // Function writes CPU, GPU and RAM values
+    // Function reads OS dependant System Properties for Linux Distributions
     fn get_linux_hardware(&mut self) {
         // TODO: implement in the future
     }
 
+    // Return echo result of the execution of the passed shell command
     fn get_shell_output(shell_input_command: &str) -> String {
         let bash_command = "echo ".to_string() + shell_input_command;
         let output = Command::new("sh")
@@ -181,6 +184,7 @@ impl fmt::Display for System {
 
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
+        // Vector which defines the order in which the SystemProperties are printed
         let output_data_vector = vec![&self.username, &self.hostname, &self.os, &self.cpu, &self.ram, &self.graphics, &self.terminal, &self.shell, &self.editor, &self.disk_percentage];
 
         for element in &output_data_vector {
@@ -190,7 +194,6 @@ impl fmt::Display for System {
                 Err(_e) => return write_result,
             }
         }
-
         Ok(())
     }
 }
