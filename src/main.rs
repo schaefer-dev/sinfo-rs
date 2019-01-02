@@ -13,7 +13,6 @@ use std::process::Command;
 
 fn main() {
     let mut system = System::read_data();
-    system.update_os();
 
     system.post_processing();
     println!("{}", system);
@@ -22,7 +21,6 @@ fn main() {
 struct System {
     username: String,
     os: String,
-    env: String,
     hostname: String,
     graphics: String,
     cpu: String,
@@ -35,37 +33,27 @@ impl System {
 
     fn read_data() -> System {
         // TODO: call the get functions here directly instead of setting to unknown and afterwards
-        System {
+        let mut system: System = System {
             username: whoami::username(),
-            os: whoami::os(),
-            env: whoami::env().to_string(),
+            os: System::get_os(),
             hostname: whoami::hostname(),
             graphics: "unknown".to_string(),
             cpu: "unknown".to_string(),
-            terminal: System::get_environment_var_value("$TERM"),
-            editor: System::get_environment_var_value("$EDITOR"),
+            terminal: System::get_shell_output("$TERM"),
+            editor: System::get_shell_output("$EDITOR"),
             is_mac: false,
-        }
+        };
+        system.get_hardware();
+        system
     }
 
     // Perform post-processing to make Strings look more appealing
     fn post_processing(&mut self) -> () {
         // Remove all occurances of '.local' in hostname
         remove_local_substrings(&mut self.hostname);
-    }
 
-    fn update_os(&mut self) {
-        // if OS not detected, use my own approach
-        // NOTE: whoami library outputs a typo in the case of OS being unknown
-        if self.os == "uknown" || self.os == "unknown" {
-            self.os = System::get_os();
-            if self.os[0..3] == "OSX".to_string() {
-                self.is_mac = true;
-                self.get_osx_graphics();
-            } else {
-                self.get_linux_graphics();
-            }
-        }
+        // TODO: Think of a safe approach to truncate 'Intel(R) Core(TM)' without hardcoding 18 chars
+        self.cpu = self.cpu[18..].to_string();
     }
 
     fn get_os() -> String {
@@ -81,24 +69,29 @@ impl System {
         return os_string;
     }
 
-    fn get_osx_graphics(&mut self) {
-        let output = Command::new("sh").arg("-c").arg("echo $(system_profiler SPDisplaysDataType | awk '/Model/{for (i=1; i<=NF-2; i++) $i = $(i+2); NF-=2; print}' | paste -sd '/' -)").output().expect("failed to execute Graphics command");
-        match std::str::from_utf8(&output.stdout) {
-            Ok(v) => {
-                self.graphics = v.to_string();
-                // Remove trailing newline at the end of output
-                self.graphics.pop();
-            },
-            Err(_e) => self.graphics = "ERROR".to_string(),
+    fn get_hardware(&mut self) {
+        if self.os[0..3] == "OSX".to_string() {
+            self.is_mac = true;
+            self.get_osx_hardware();
+        } else {
+            self.get_linux_hardware();
         }
     }
 
-    fn get_linux_graphics(&mut self) {
+    // Function writes CPU, GPU and RAM values
+    fn get_osx_hardware(&mut self) {
+        self.graphics = System::get_shell_output("$(system_profiler SPDisplaysDataType | awk '/Model/{for (i=1; i<=NF-2; i++) $i = $(i+2); NF-=2; print}' | paste -sd '/' -)");
+
+        self.cpu = System::get_shell_output("$(sysctl -n machdep.cpu.brand_string)");
+    }
+
+    // Function writes CPU, GPU and RAM values
+    fn get_linux_hardware(&mut self) {
         // TODO: implement in the future
     }
 
-    fn get_environment_var_value(input_string: &str) -> String {
-        let bash_command = "echo ".to_string() + input_string;
+    fn get_shell_output(shell_input_command: &str) -> String {
+        let bash_command = "echo ".to_string() + shell_input_command;
         let output = Command::new("sh")
             .arg("-c")
             .arg(bash_command)
@@ -123,7 +116,6 @@ impl fmt::Display for System {
         let username_prefix = "Username:".cyan();
         let hostname_prefix = "Hostname:".cyan();
         let os_prefix = "Distro:".cyan();
-        let env_prefix = "ENV:".cyan();
         let cpu_prefix = "CPU:".cyan();
         let graphics_prefix = "GPU:".cyan();
         let terminal_prefix = "Term:".cyan();
@@ -142,12 +134,6 @@ impl fmt::Display for System {
         }
 
         let write_result = write!(f, "{} {}\n", os_prefix, self.os);
-        match write_result {
-            Ok(_v) => (),
-            Err(_e) => return write_result,
-        }
-
-        let write_result = write!(f, "{} {}\n", env_prefix, self.env);
         match write_result {
             Ok(_v) => (),
             Err(_e) => return write_result,
@@ -176,7 +162,6 @@ impl fmt::Display for System {
             Ok(_v) => (),
             Err(_e) => return write_result,
         }
-
 
 
         Ok(())
