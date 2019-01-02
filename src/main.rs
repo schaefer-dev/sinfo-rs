@@ -43,7 +43,7 @@ impl System {
 
         let username: SystemProperty = SystemProperty {
             value: whoami::username(),
-            prefix: "Username:".cyan().to_string(),
+            prefix: "User:".cyan().to_string(),
         };
 
         let os: SystemProperty = SystemProperty {
@@ -53,7 +53,7 @@ impl System {
 
         let hostname: SystemProperty = SystemProperty {
             value: whoami::hostname(),
-            prefix: "Hostname:".cyan().to_string(),
+            prefix: "Host:".cyan().to_string(),
         };
 
         let graphics: SystemProperty = SystemProperty {
@@ -185,7 +185,17 @@ impl fmt::Display for System {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
 
         // Vector which defines the order in which the SystemProperties are printed
-        let output_data_vector = vec![&self.username, &self.hostname, &self.os, &self.cpu, &self.ram, &self.graphics, &self.terminal, &self.shell, &self.editor, &self.disk_percentage];
+        let spacer: SystemProperty = SystemProperty {
+            prefix: "----------------------------".yellow().to_string(),
+            value: "".to_string(),
+        };
+
+        let output_data_vector = vec![
+            &self.username, &self.hostname, &self.os,
+            &spacer,
+            &self.cpu, &self.ram, &self.graphics, &self.disk_percentage,
+            &spacer,
+            &self.terminal, &self.shell, &self.editor];
 
         for element in &output_data_vector {
             let write_result = write!(f, "{} {}\n", element.prefix, element.value);
